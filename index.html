@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Área de Triángulo</title>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2f6fed"/>
+
+  <style>
+    body{font-family: Arial, Helvetica, sans-serif;background:#f4f6f9;margin:0;padding:0}
+    .container{max-width:520px;margin:40px auto;background:#fff;padding:22px;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.08)}
+    h1{margin:0;font-size:22px}
+    p{color:#555;margin:6px 0 0}
+    .tabs{display:flex;gap:10px;margin:16px 0}
+    .tab{flex:1;padding:10px;border:1px solid #d9dde5;border-radius:12px;cursor:pointer;background:#fff;font-weight:700}
+    .tab.active{border-color:#2f6fed;background:#eaf1ff;color:#1f4fc0}
+    .form{display:none;margin-top:12px}
+    .form.active{display:block}
+    label{display:block;font-weight:700;margin-top:12px;margin-bottom:6px}
+    input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #d9dde5;outline:none;font-size:15px}
+    input:focus{border-color:#2f6fed;box-shadow:0 0 0 3px rgba(47,111,237,.15)}
+    .btn{width:100%;margin-top:16px;border:none;cursor:pointer;padding:12px;border-radius:12px;background:#2f6fed;color:#fff;font-weight:800;font-size:15px}
+    .result{margin-top:14px;padding:12px;border-radius:12px;background:#f6f8fb;border:1px dashed #cbd5e1;color:#111}
+    .error{margin-top:12px;padding:12px;border-radius:12px;background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;font-weight:700}
+    .small{font-size:12px;color:#6b7280;margin-top:8px}
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Calculadora de Área de un Triángulo</h1>
+    <p>Elige el método de cálculo y obtén el área.</p>
+
+    <div class="tabs">
+      <button class="tab active" id="tabBaseAltura">Base & Altura</button>
+      <button class="tab" id="tabHeron">Lados (Herón)</button>
+    </div>
+
+    <div class="form active" id="formBaseAltura">
+      <label>Base</label>
+      <input type="number" id="base" placeholder="Ej. 10" min="0" step="any">
+
+      <label>Altura</label>
+      <input type="number" id="altura" placeholder="Ej. 6" min="0" step="any">
+
+      <button class="btn" id="btnBA">Calcular Área</button>
+      <div class="small">Fórmula: Área = (Base × Altura) / 2</div>
+    </div>
+
+    <div class="form" id="formHeron">
+      <label>Lado a</label>
+      <input type="number" id="ladoA" placeholder="Ej. 6" min="0" step="any">
+
+      <label>Lado b</label>
+      <input type="number" id="ladoB" placeholder="Ej. 7" min="0" step="any">
+
+      <label>Lado c</label>
+      <input type="number" id="ladoC" placeholder="Ej. 8" min="0" step="any">
+
+      <button class="btn" id="btnH">Calcular Área</button>
+      <div class="small">Herón: s=(a+b+c)/2 → Área = √(s(s-a)(s-b)(s-c))</div>
+    </div>
+
+    <div id="mensaje"></div>
+  </div>
+
+  <script>
+    // Registrar Service Worker (offline)
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
+    }
+
+    const tabBaseAltura = document.getElementById("tabBaseAltura");
+    const tabHeron = document.getElementById("tabHeron");
+    const formBaseAltura = document.getElementById("formBaseAltura");
+    const formHeron = document.getElementById("formHeron");
+    const mensaje = document.getElementById("mensaje");
+
+    tabBaseAltura.addEventListener("click", () => {
+      tabBaseAltura.classList.add("active");
+      tabHeron.classList.remove("active");
+      formBaseAltura.classList.add("active");
+      formHeron.classList.remove("active");
+      limpiarMensaje();
+    });
+
+    tabHeron.addEventListener("click", () => {
+      tabHeron.classList.add("active");
+      tabBaseAltura.classList.remove("active");
+      formHeron.classList.add("active");
+      formBaseAltura.classList.remove("active");
+      limpiarMensaje();
+    });
+
+    function limpiarMensaje(){ mensaje.innerHTML = ""; }
+    function mostrarError(t){ mensaje.innerHTML = `<div class="error">⚠️ ${t}</div>`; }
+    function mostrarResultado(area){ mensaje.innerHTML = `<div class="result"><b>Área del triángulo:</b> ${area.toFixed(4)} u²</div>`; }
+
+    document.getElementById("btnBA").addEventListener("click", () => {
+      limpiarMensaje();
+      const base = parseFloat(document.getElementById("base").value);
+      const altura = parseFloat(document.getElementById("altura").value);
+
+      if (Number.isNaN(base) || Number.isNaN(altura)) return mostrarError("Ingresa base y altura correctamente.");
+      if (base <= 0 || altura <= 0) return mostrarError("La base y la altura deben ser mayores a 0.");
+
+      mostrarResultado((base * altura) / 2);
+    });
+
+    document.getElementById("btnH").addEventListener("click", () => {
+      limpiarMensaje();
+      const a = parseFloat(document.getElementById("ladoA").value);
+      const b = parseFloat(document.getElementById("ladoB").value);
+      const c = parseFloat(document.getElementById("ladoC").value);
+
+      if ([a,b,c].some(x => Number.isNaN(x))) return mostrarError("Ingresa los 3 lados correctamente.");
+      if (a <= 0 || b <= 0 || c <= 0) return mostrarError("Todos los lados deben ser mayores a 0.");
+      if (a + b <= c || a + c <= b || b + c <= a) return mostrarError("Con esos lados NO se puede formar un triángulo.");
+
+      const s = (a + b + c) / 2;
+      const area = Math.sqrt(s * (s - a) * (s - b) * (s - c));
+      mostrarResultado(area);
+    });
+  </script>
+</body>
+</html>
